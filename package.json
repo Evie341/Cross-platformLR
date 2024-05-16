@@ -1,5 +1,5 @@
 {
-  "name": "lr",
+  "name": "MyApp",
   "productName": "CPU Monitor",
   "version": "1.0.0",
   "description": "My Electron application description",
@@ -25,7 +25,7 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "lr",
+    "appId": "MyApp",
     "win": {
       "target": [
         "nsis"
@@ -33,10 +33,12 @@
       "requestedExecutionLevel": "requireAdministrator"
     },
     "nsis": {
-      "uninstallDisplayName": "lr",
+      "uninstallDisplayName": "MyApp",
       "license": "license.txt",
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "script": "script.nsi",
+      "warningsAsErrors": false
     }
   },
   "keywords": [],
