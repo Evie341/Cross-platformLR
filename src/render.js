@@ -1,36 +1,39 @@
-const { desktopCapturer, remote } = require('electron');
-const { dialog, Menu } = remote;
+const { desktopCapturer, dialog } = require('electron');
 const { writeFile } = require('fs');
+const { Menu } = require('@electron/remote');
 
 let mediaRecorder; // MediaRecorder instance to capture footage
 const recordedChunks = [];
-
 const videoElement = document.querySelector('video');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const videoSelectBtn = document.getElementById('videoSelectBtn');
-const playBtn = document.getElementById('playBtn');
-const saveBtn = document.getElementById('saveBtn');
+const playBtn = document.getElementById('playBtn'); // Додано кнопку відтворення
+const saveBtn = document.getElementById('saveBtn'); // Додано кнопку збереження
 
 // Вибір джерела відео
 videoSelectBtn.onclick = getVideoSources;
 
 // Запуск запису
 startBtn.onclick = e => {
-  mediaRecorder.start();
-  startBtn.classList.add('is-danger');
-  startBtn.innerText = 'Recording';
+  if (mediaRecorder && mediaRecorder.state === 'inactive') {
+    mediaRecorder.start();
+    startBtn.classList.add('is-danger');
+    startBtn.innerText = 'Запис';
+  }
 };
 
 // Зупинка запису
 stopBtn.onclick = e => {
-  mediaRecorder.stop();
-  startBtn.classList.remove('is-danger');
-  startBtn.innerText = 'Start';
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    startBtn.classList.remove('is-danger');
+    startBtn.innerText = 'Старт';
+  }
 };
 
 // Відтворення записаного відео
-playBtn.onclick = async e => {
+playBtn.onclick = e => {
   const blob = new Blob(recordedChunks, {
     type: 'video/webm; codecs=vp9'
   });
@@ -46,17 +49,16 @@ saveBtn.onclick = async e => {
   });
   const buffer = Buffer.from(await blob.arrayBuffer());
   const { filePath } = await dialog.showSaveDialog({
-    buttonLabel: 'Save video',
+    buttonLabel: 'Зберегти відео',
     defaultPath: `vid-${Date.now()}.webm`
   });
 
   if (filePath) {
-    writeFile(filePath, buffer, () => console.log('Video saved successfully!'));
+    writeFile(filePath, buffer, () => console.log('Відео успішно збережено!'));
   }
 };
 
-
-// Функція для отримання доступних джерел для запису відео
+// Функції для запису відео
 async function getVideoSources() {
   const inputSources = await desktopCapturer.getSources({
     types: ['window', 'screen']
@@ -74,7 +76,6 @@ async function getVideoSources() {
   videoOptionsMenu.popup();
 }
 
-// Функція для вибору джерела відео
 async function selectSource(source) {
   videoSelectBtn.innerText = source.name;
 
@@ -88,45 +89,33 @@ async function selectSource(source) {
     }
   };
 
-  // Отримання потоку відео
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-  // Попередній перегляд відео
   videoElement.srcObject = stream;
   videoElement.play();
 
-  // Налаштування MediaRecorder
   const options = { mimeType: 'video/webm; codecs=vp9' };
   mediaRecorder = new MediaRecorder(stream, options);
 
-  // Обробники подій для MediaRecorder
   mediaRecorder.ondataavailable = handleDataAvailable;
   mediaRecorder.onstop = handleStop;
-
-  // Запис фрагментів відео
-  mediaRecorder.start();
 }
 
-// Функція для обробки доступних даних відео
 function handleDataAvailable(e) {
   recordedChunks.push(e.data);
 }
 
-// Функція для зупинки запису та збереження відеофайлу
 async function handleStop(e) {
   const blob = new Blob(recordedChunks, {
     type: 'video/webm; codecs=vp9'
   });
 
   const buffer = Buffer.from(await blob.arrayBuffer());
-
-  // Збереження файлу за допомогою dialog.showSaveDialog
   const { filePath } = await dialog.showSaveDialog({
-    buttonLabel: 'Save video',
+    buttonLabel: 'Зберегти відео',
     defaultPath: `vid-${Date.now()}.webm`
   });
 
   if (filePath) {
-    writeFile(filePath, buffer, () => console.log('Video saved successfully!'));
+    writeFile(filePath, buffer, () => console.log('Відео успішно збережено!'));
   }
 }

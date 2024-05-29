@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+require('@electron/remote/main').initialize();
 const { enable } = require('@electron/remote/main');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -14,19 +15,14 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: false, // вимкніть contextIsolation
-      enableRemoteModule: true, // включіть enableRemoteModule
-      nodeIntegration: true // включіть nodeIntegration
+      contextIsolation: false,    
+      enableRemoteModule: true,   
+      nodeIntegration: true    
     },
   });
 
-  // Включіть @electron/remote для цього WebContents
   enable(mainWindow.webContents);
-
-  // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-
-  // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
 
